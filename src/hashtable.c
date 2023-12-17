@@ -43,33 +43,69 @@ HashTable *createHashTable(int size, unsigned int (*hashFunction)(void *),
 
 /* Task 1.2 */
 void insertData(HashTable *table, void *key, void *data) {
-  // -- TODO --
-  // HINT:
-  // 1. Find the right hash bucket location with table->hashFunction.
-  // 2. Allocate a new hash bucket entry struct.
-  // 3. Append to the linked list or create it if it does not yet exist. 
+  int size = table->size;
+  unsigned int index = table->hashFunction(key) % size;
+
+  HashBucketEntry *newEntry = (HashBucketEntry*)malloc(sizeof(struct HashBucketEntry));
+  if(newEntry == NULL){
+    fprintf(stderr, "malloc failed \n");
+    exit(1);
+  }
+  newEntry->key = key;
+  newEntry->data = data;
+  newEntry->next = NULL; 
+
+  if(table->buckets[index] == NULL){
+    table->buckets[index] = newEntry;
+  }else{
+    newEntry->next = table->buckets[index]->next;
+    table->buckets[index]->next = newEntry;
+  }
 }
 
 /* Task 1.3 */
 void *findData(HashTable *table, void *key) {
-  // -- TODO --
-  // HINT:
-  // 1. Find the right hash bucket with table->hashFunction.
-  // 2. Walk the linked list and check for equality with table->equalFunction.
+  //safe check
+  if(table == NULL){
+    return NULL;
+  }
+
+  int size = table->size;
+  unsigned int index = table->hashFunction(key) % size;
+  
+  HashBucketEntry *head = table->buckets[index];
+
+  while(head != NULL){
+    if(table->equalFunction(head->key, key)){
+      return head->data;
+    }
+    head = head->next;
+  }
+  return NULL;
 }
 
 /* Task 2.1 */
 unsigned int stringHash(void *s) {
-  // -- TODO --
-  fprintf(stderr, "need to implement stringHash\n");
-  /* To suppress compiler warning until you implement this function, */
-  return 0;
+  unsigned char *str = (unsigned char *)s;
+  unsigned int hash = 5381; // Initial hash value
+  while (*str != '\0') {
+    hash = ((hash << 5) + hash) + *str; // hash * 33 + *str
+    str++;
+  }
+  return hash;
 }
 
 /* Task 2.2 */
 int stringEquals(void *s1, void *s2) {
-  // -- TODO --
-  fprintf(stderr, "You need to implement stringEquals");
-  /* To suppress compiler warning until you implement this function */
-  return 0;
+  char *newS1 = (char*)s1;
+  char *newS2 = (char*)s2;
+  if(strlen(newS1) != strlen(newS2)){
+    return 0;
+  }
+  for(int i = 0; i < strlen(newS1); ++i){      
+    if(newS1[i] != newS2[i]){
+      return 0;
+    }
+  }
+  return 1;
 }
